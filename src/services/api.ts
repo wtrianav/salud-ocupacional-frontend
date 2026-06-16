@@ -2,7 +2,7 @@ import axios from 'axios';
 import { type Employee, type HealthRecord } from '../types/types';
 
 const api = axios.create({
-	baseURL: 'http://localhost:8080/api',
+	baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8080/api',
 	headers: {
 		'Content-Type': 'application/json',
 	},
@@ -106,10 +106,69 @@ export const saludService = {
 };
 
 export const dashboardService = {
-	obtenerTodosLosRegistros: async () => {
-		const response = await api.get<HealthRecord[]>('/dashboard/registros');
+	obtenerResumen: async () => {
+		const response = await api.get('/dashboard/resumen');
 		return response.data;
 	},
+};
+
+export const exportacionService = {
+    descargarReporteDiario: async (fecha: string) => {
+        try {
+            const response = await api.get(`/exportar/diario?fecha=${fecha}`, {
+                responseType: 'blob', // MUY IMPORTANTE
+            });
+
+            const url = window.URL.createObjectURL(new Blob([response.data]));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', `Reporte_Diario_${fecha}.xlsx`);
+            document.body.appendChild(link);
+            link.click();
+            link.parentNode.removeChild(link);
+        } catch (error) {
+            console.error("Error al descargar el archivo diario", error);
+            alert("Hubo un error al generar el reporte diario.");
+        }
+    },
+
+    descargarExpediente: async (documento: string) => {
+        try {
+            const response = await api.get(`/exportar/expediente/${documento}`, {
+                responseType: 'blob',
+            });
+
+            const url = window.URL.createObjectURL(new Blob([response.data]));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', `Expediente_Medico_${documento}.xlsx`);
+            document.body.appendChild(link);
+            link.click();
+            link.parentNode.removeChild(link);
+        } catch (error) {
+            console.error("Error al descargar el expediente", error);
+            alert("Hubo un error al generar el expediente médico.");
+        }
+    },
+
+	descargarReporteRango: async (fechaInicio: string, fechaFin: string) => {
+        try {
+            const response = await api.get(`/exportar/rango?fechaInicio=${fechaInicio}&fechaFin=${fechaFin}`, {
+                responseType: 'blob',
+            });
+
+            const url = window.URL.createObjectURL(new Blob([response.data]));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', `Consolidado_${fechaInicio}_al_${fechaFin}.xlsx`);
+            document.body.appendChild(link);
+            link.click();
+            link.parentNode.removeChild(link);
+        } catch (error) {
+            console.error("Error al descargar el reporte por rango", error);
+            alert("Hubo un error al generar el reporte.");
+        }
+    }
 };
 
 export default api;
