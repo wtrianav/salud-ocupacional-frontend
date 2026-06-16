@@ -1,4 +1,3 @@
-// src/utils/analizadorMedico.ts
 import { type HealthRecord } from '../types/types';
 
 export interface AlertaMedica {
