@@ -1,4 +1,5 @@
 import { Link, Outlet, useLocation } from 'react-router-dom';
+import Swal from 'sweetalert2';
 import { Users, HeartPulse, UserPlus, PieChart, LogOut } from 'lucide-react';
 import { authService } from '../services/api';
 
@@ -8,9 +9,20 @@ export default function Layout() {
     const isActive = (path: string) => location.pathname === path;
 
     const handleLogout = () => {
-        if (window.confirm('¿Deseas cerrar tu sesión?')) {
-            authService.logout();
-        }
+        Swal.fire({
+            title: '¿Deseas cerrar sesión?',
+            text: "Tendrás que volver a ingresar tus credenciales.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3b82f6',
+            cancelButtonColor: '#94a3b8',
+            confirmButtonText: 'Sí, salir',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                authService.logout();
+            }
+        });
     };
 
     return (

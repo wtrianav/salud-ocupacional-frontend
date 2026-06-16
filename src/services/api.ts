@@ -1,4 +1,5 @@
 import axios from 'axios';
+import toast from 'react-hot-toast';
 import { type Employee, type HealthRecord } from '../types/types';
 
 const api = axios.create({
@@ -113,6 +114,7 @@ export const dashboardService = {
 
 export const exportacionService = {
     descargarReporteDiario: async (fecha: string) => {
+        const toastId = toast.loading('Generando reporte...');
         try {
             const response = await api.get(`/exportar/diario?fecha=${fecha}`, {
                 responseType: 'blob', // MUY IMPORTANTE
@@ -125,13 +127,15 @@ export const exportacionService = {
             document.body.appendChild(link);
             link.click();
             link.parentNode.removeChild(link);
+            toast.success('Reporte descargado correctamente', { id: toastId });
         } catch (error) {
             console.error("Error al descargar el archivo diario", error);
-            alert("Hubo un error al generar el reporte diario.");
+            toast.error("Hubo un error al generar el reporte.", { id: toastId });
         }
     },
 
     descargarExpediente: async (documento: string) => {
+        const toastId = toast.loading('Preparando expediente...');
         try {
             const response = await api.get(`/exportar/expediente/${documento}`, {
                 responseType: 'blob',
@@ -144,13 +148,15 @@ export const exportacionService = {
             document.body.appendChild(link);
             link.click();
             link.parentNode.removeChild(link);
+            toast.success('Expediente exportado con éxito', { id: toastId });
         } catch (error) {
             console.error("Error al descargar el expediente", error);
-            alert("Hubo un error al generar el expediente médico.");
+            toast.error("No se pudo generar el expediente médico.", { id: toastId });
         }
     },
 
 	descargarReporteRango: async (fechaInicio: string, fechaFin: string) => {
+        const toastId = toast.loading('Procesando consolidado...');
         try {
             const response = await api.get(`/exportar/rango?fechaInicio=${fechaInicio}&fechaFin=${fechaFin}`, {
                 responseType: 'blob',
@@ -163,9 +169,10 @@ export const exportacionService = {
             document.body.appendChild(link);
             link.click();
             link.parentNode.removeChild(link);
+            toast.success('Consolidado descargado con éxito', { id: toastId });
         } catch (error) {
             console.error("Error al descargar el reporte por rango", error);
-            alert("Hubo un error al generar el reporte.");
+            toast.error("Hubo un error al generar el reporte general.", { id: toastId });
         }
     }
 };

@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react';
+import Swal from 'sweetalert2';
+import toast from 'react-hot-toast';
 import { Users, Search, HeartPulse, Trash2, Pencil, X, ChevronLeft, ChevronRight, Calendar, Download, Activity } from 'lucide-react';
 import { empleadoService, exportacionService } from '../services/api';
 import { type Employee } from '../types/types';
@@ -100,16 +102,24 @@ export default function ListaEmpleados() {
     }, [busqueda]);
 
     const handleEliminar = async (id: number, nombre: string) => {
-        if (
-            window.confirm(
-                `¿Estás seguro de que deseas eliminar permanentemente a ${nombre}? Esto borrará también todo su historial médico.`,
-            )
-        ) {
+        const result = await Swal.fire({
+            title: '¿Estás completamente seguro?',
+            text: `Vas a eliminar a ${nombre} y todo su historial médico. Esta acción no se puede deshacer.`,
+            icon: 'error',
+            showCancelButton: true,
+            confirmButtonColor: '#ef4444',
+            cancelButtonColor: '#94a3b8',
+            confirmButtonText: 'Sí, eliminar',
+            cancelButtonText: 'Cancelar'
+        });
+
+        if (result.isConfirmed) {
             try {
                 await empleadoService.eliminar(id);
                 setEmpleados(empleados.filter((emp) => emp.id !== id));
+                toast.success(`El empleado ${nombre} fue eliminado.`);
             } catch (error) {
-                alert('Hubo un error al intentar eliminar el registro.');
+                toast.error('Hubo un error al intentar eliminar el registro.');
             }
         }
     };
@@ -125,8 +135,9 @@ export default function ListaEmpleados() {
             );
             setEmpleadoEditando(null);
             cargarEmpleados();
+            toast.success('Datos actualizados correctamente');
         } catch (error) {
-            alert('Error al actualizar los datos.');
+            toast.error('Error al actualizar los datos.');
         }
     };
 
