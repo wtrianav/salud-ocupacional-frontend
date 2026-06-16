@@ -1,8 +1,75 @@
 import { useEffect, useState } from 'react';
-import { Users, Search, HeartPulse, Trash2, Pencil, X, ChevronLeft, ChevronRight } from 'lucide-react';
-import { empleadoService } from '../services/api';
+import { Users, Search, HeartPulse, Trash2, Pencil, X, ChevronLeft, ChevronRight, Calendar, Download, Activity } from 'lucide-react';
+import { empleadoService, exportacionService } from '../services/api';
 import { type Employee } from '../types/types';
 import { Link } from 'react-router-dom';
+
+function PanelReportesGenerales() {
+    const [fechaInicio, setFechaInicio] = useState('');
+    const [fechaFin, setFechaFin] = useState('');
+    const [descargando, setDescargando] = useState(false);
+
+    const handleGenerarReporte = async () => {
+        if (!fechaInicio || !fechaFin) {
+            alert("Por favor selecciona ambas fechas");
+            return;
+        }
+        if (new Date(fechaInicio) > new Date(fechaFin)) {
+            alert("La fecha de inicio no puede ser mayor a la fecha de fin");
+            return;
+        }
+
+        setDescargando(true);
+        await exportacionService.descargarReporteRango(fechaInicio, fechaFin);
+        setDescargando(false);
+    };
+
+    return (
+        <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+            <div className="flex items-center gap-2 mb-4 border-b border-slate-100 pb-3">
+                <Calendar className="w-5 h-5 text-emerald-600" />
+                <h3 className="font-bold text-slate-800 text-lg">Exportar Consolidado General</h3>
+            </div>
+            
+            <p className="text-sm text-slate-500 mb-4">
+                Genera un reporte en Excel con todas las tomas médicas de todos los empleados en un periodo específico.
+            </p>
+
+            <div className="flex flex-col md:flex-row items-end gap-4">
+                <div className="flex flex-col w-full md:w-auto">
+                    <label className="text-xs font-semibold text-slate-600 mb-1">Fecha Inicio</label>
+                    <input 
+                        type="date" 
+                        value={fechaInicio}
+                        onChange={(e) => setFechaInicio(e.target.value)}
+                        className="p-2 border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-emerald-500"
+                    />
+                </div>
+                <div className="flex flex-col w-full md:w-auto">
+                    <label className="text-xs font-semibold text-slate-600 mb-1">Fecha Fin</label>
+                    <input 
+                        type="date" 
+                        value={fechaFin}
+                        onChange={(e) => setFechaFin(e.target.value)}
+                        className="p-2 border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-emerald-500"
+                    />
+                </div>
+                
+                <button 
+                    onClick={handleGenerarReporte}
+                    disabled={descargando || !fechaInicio || !fechaFin}
+                    className="cursor-pointer w-full md:w-auto px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg transition-colors text-sm flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                    {descargando ? (
+                        <><Activity className="w-4 h-4 animate-spin" /> Procesando...</>
+                    ) : (
+                        <><Download className="w-4 h-4" /> Exportar Reporte</>
+                    )}
+                </button>
+            </div>
+        </div>
+    );
+}
 
 export default function ListaEmpleados() {
     const [empleados, setEmpleados] = useState<Employee[]>([]);
@@ -119,6 +186,9 @@ export default function ListaEmpleados() {
                     </div>
                 </div>
             </div>
+
+            <PanelReportesGenerales />
+
             <div className='bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col'>
                 <div className='overflow-x-auto'>
                     <table className='w-full text-left border-collapse'>
@@ -356,27 +426,27 @@ export default function ListaEmpleados() {
                                     </select>
                                 </div>
                             </div>
-							<div className="col-span-1 md:col-span-2 pt-4 mt-2 border-t border-slate-100">
-								<h4 className="font-bold text-slate-700 mb-3">Antecedentes Médicos</h4>
-								<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-									<div>
-										<label className='block text-sm font-semibold text-slate-600 mb-1'>Enfermedades Padecidas</label>
-										<textarea rows={2} value={empleadoEditando.enfermedadesPadecidas || ''} onChange={(e) => setEmpleadoEditando({...empleadoEditando, enfermedadesPadecidas: e.target.value})} placeholder="Ej: Asma, Hipertensión..." className='w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none resize-none' />
-									</div>
-									<div>
-										<label className='block text-sm font-semibold text-slate-600 mb-1'>Alergias (Medicamentos/Otros)</label>
-										<textarea rows={2} value={empleadoEditando.alergias || ''} onChange={(e) => setEmpleadoEditando({...empleadoEditando, alergias: e.target.value})} placeholder="Ej: Penicilina, Polvo, Ninguna..." className='w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none resize-none' />
-									</div>
-									<div>
-										<label className='block text-sm font-semibold text-slate-600 mb-1'>Cirugías / Operaciones previas</label>
-										<textarea rows={2} value={empleadoEditando.operaciones || ''} onChange={(e) => setEmpleadoEditando({...empleadoEditando, operaciones: e.target.value})} placeholder="Ej: Apendicectomía (2015), Ninguna..." className='w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none resize-none' />
-									</div>
-									<div>
-										<label className='block text-sm font-semibold text-slate-600 mb-1'>Herencia Familiar</label>
-										<textarea rows={2} value={empleadoEditando.herenciaFamiliar || ''} onChange={(e) => setEmpleadoEditando({...empleadoEditando, herenciaFamiliar: e.target.value})} placeholder="Ej: Madre diabética, Padre con antecedente cardíaco..." className='w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none resize-none' />
-									</div>
-								</div>
-							</div>
+                            <div className="col-span-1 md:col-span-2 pt-4 mt-2 border-t border-slate-100">
+                                <h4 className="font-bold text-slate-700 mb-3">Antecedentes Médicos</h4>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className='block text-sm font-semibold text-slate-600 mb-1'>Enfermedades Padecidas</label>
+                                        <textarea rows={2} value={empleadoEditando.enfermedadesPadecidas || ''} onChange={(e) => setEmpleadoEditando({...empleadoEditando, enfermedadesPadecidas: e.target.value})} placeholder="Ej: Asma, Hipertensión..." className='w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none resize-none' />
+                                    </div>
+                                    <div>
+                                        <label className='block text-sm font-semibold text-slate-600 mb-1'>Alergias (Medicamentos/Otros)</label>
+                                        <textarea rows={2} value={empleadoEditando.alergias || ''} onChange={(e) => setEmpleadoEditando({...empleadoEditando, alergias: e.target.value})} placeholder="Ej: Penicilina, Polvo, Ninguna..." className='w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none resize-none' />
+                                    </div>
+                                    <div>
+                                        <label className='block text-sm font-semibold text-slate-600 mb-1'>Cirugías / Operaciones previas</label>
+                                        <textarea rows={2} value={empleadoEditando.operaciones || ''} onChange={(e) => setEmpleadoEditando({...empleadoEditando, operaciones: e.target.value})} placeholder="Ej: Apendicectomía (2015), Ninguna..." className='w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none resize-none' />
+                                    </div>
+                                    <div>
+                                        <label className='block text-sm font-semibold text-slate-600 mb-1'>Herencia Familiar</label>
+                                        <textarea rows={2} value={empleadoEditando.herenciaFamiliar || ''} onChange={(e) => setEmpleadoEditando({...empleadoEditando, herenciaFamiliar: e.target.value})} placeholder="Ej: Madre diabética, Padre con antecedente cardíaco..." className='w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none resize-none' />
+                                    </div>
+                                </div>
+                            </div>
 
                             <div className='flex justify-end gap-3 border-t border-slate-100'>
                                 <button
