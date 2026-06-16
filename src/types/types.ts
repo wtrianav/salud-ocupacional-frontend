@@ -27,4 +27,5 @@ export interface HealthRecord {
 	imc?: number;
 	clasificacionImc?: string;
 	estadoTension?: string;
+	empleado?: Employee;
 }
