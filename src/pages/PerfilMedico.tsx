@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Activity, User, ArrowLeft, Save, AlertCircle, HeartPulse, Droplet, Pencil, X, ClipboardList, Plus } from 'lucide-react';
-import { empleadoService, saludService } from '../services/api';
+import { empleadoService, saludService, exportacionService } from '../services/api';
 import { type Employee, type HealthRecord } from '../types/types';
 import {
     LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
@@ -22,6 +22,7 @@ export default function PerfilMedico() {
 
     const [diagnosticoIA, setDiagnosticoIA] = useState<string | null>(null);
     const [cargandoIA, setCargandoIA] = useState(false);
+    const [descargandoExcel, setDescargandoExcel] = useState(false);
 
     const [nuevoRegistro, setNuevoRegistro] = useState({
         sistolica: '',
@@ -108,6 +109,13 @@ export default function PerfilMedico() {
         }
     };
 
+    const handleExportarExpediente = async () => {
+        if (!documento) return;
+        setDescargandoExcel(true);
+        await exportacionService.descargarExpediente(documento);
+        setDescargandoExcel(false);
+    };
+
     if (cargando) return <div className='p-8 text-slate-500'>Cargando perfil médico...</div>;
     if (!empleado) return <div className='p-8 text-red-500'>Empleado no encontrado.</div>;
 
@@ -124,8 +132,16 @@ export default function PerfilMedico() {
                     <h2 className='text-2xl font-bold text-slate-800'>Expediente Médico</h2>
                 </div>
                 <div className='flex items-center gap-3'>
-                    <button onClick={() => window.print()} className='cursor-pointer px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-lg flex items-center gap-2 transition-colors text-sm border border-slate-200'>
-                        Exportar
+                    <button 
+                        onClick={handleExportarExpediente} 
+                        disabled={descargandoExcel || historial.length === 0}
+                        className='cursor-pointer px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-lg flex items-center gap-2 transition-colors text-sm border border-slate-200 disabled:opacity-50'
+                    >
+                        {descargandoExcel ? (
+                            <> <Activity className="w-4 h-4 animate-spin" /> Exportando... </>
+                        ) : (
+                            <> <ClipboardList className="w-4 h-4" /> Exportar Excel </>
+                        )}
                     </button>
                     <button onClick={() => setMostrandoModalNuevaToma(true)} className='cursor-pointer px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg flex items-center gap-2 transition-colors text-sm shadow-sm'>
                         <Plus className="w-4 h-4" /> Nueva Toma
